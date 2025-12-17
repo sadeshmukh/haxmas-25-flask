@@ -1,5 +1,6 @@
 import flask
 import sqlite3
+import os
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -14,8 +15,8 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
-
-conn = sqlite3.connect("wishes.db")
+DB_PATH = os.getenv("DB_PATH", "wishes.db")
+conn = sqlite3.connect(os.getenv("DB_PATH", "wishes.db"))
 cursor = conn.cursor()
 cursor.execute(
     """
@@ -48,7 +49,7 @@ def make_a_wish():
     if not name or not wish or not color:
         return "Name, wish, and color are required"
 
-    conn = sqlite3.connect("wishes.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO wishes (name, wish, color) VALUES (?, ?, ?)", (name, wish, color)
@@ -61,7 +62,7 @@ def make_a_wish():
 @app.get("/wishes")
 @limiter.exempt
 def get_wishes():
-    conn = sqlite3.connect("wishes.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT id, name, wish, color FROM wishes")
     rows = cursor.fetchall()
